@@ -8,7 +8,7 @@ on:
         required: true
         default: "nvWgW"
       layout_geometry:
-        description: "moonlander/reva"
+        description: "moonlander-mk1"
         type: choice
         options:
           - voyager
@@ -22,7 +22,7 @@ on:
           - ergodox_ez/stm32/shine
           - planck_ez
           - planck_ez/glow
-        default: voyager
+        default: moonlander
 
 permissions:
   contents: write
