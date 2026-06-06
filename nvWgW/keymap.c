@@ -18,18 +18,17 @@ enum tap_dance_codes {
   DANCE_0,
 };
 
-#define DUAL_FUNC_0 LT(15, KC_F13)
-#define DUAL_FUNC_1 LT(14, KC_F7)
-#define DUAL_FUNC_2 LT(8, KC_F22)
-#define DUAL_FUNC_3 LT(8, KC_F10)
-#define DUAL_FUNC_4 LT(11, KC_W)
-#define DUAL_FUNC_5 LT(9, KC_F9)
-#define DUAL_FUNC_6 LT(13, KC_F17)
+#define DUAL_FUNC_0 LT(14, KC_J)
+#define DUAL_FUNC_1 LT(1, KC_F14)
+#define DUAL_FUNC_2 LT(8, KC_F3)
+#define DUAL_FUNC_3 LT(2, KC_F10)
+#define DUAL_FUNC_4 LT(15, KC_Q)
+#define DUAL_FUNC_5 LT(15, KC_F5)
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [0] = LAYOUT_moonlander(
     KC_ESCAPE,      KC_1,           KC_2,           KC_3,           KC_4,           KC_5,           KC_AUDIO_VOL_DOWN,                                KC_AUDIO_VOL_UP,KC_6,           KC_7,           KC_8,           KC_9,           KC_0,           DUAL_FUNC_4,    
-    TD(DANCE_0),    KC_Q,           KC_W,           KC_E,           KC_R,           KC_T,           KC_TAB,                                         TG(1),          KC_Y,           KC_U,           KC_I,           KC_O,           DUAL_FUNC_5,    DUAL_FUNC_6,    
+    TD(DANCE_0),    KC_Q,           KC_W,           KC_E,           KC_R,           KC_T,           KC_TAB,                                         TG(1),          KC_Y,           KC_U,           KC_I,           KC_O,           DUAL_FUNC_5,    KC_BSPC,        
     ALL_T(KC_CAPS), KC_A,           KC_S,           KC_D,           KC_F,           KC_G,           KC_EQUAL,                                                                       TO(2),          KC_H,           KC_J,           KC_K,           KC_L,           LT(2, KC_SCLN), MT(MOD_LGUI, KC_ENTER),
     KC_LEFT_SHIFT,  DUAL_FUNC_0,    DUAL_FUNC_1,    DUAL_FUNC_2,    DUAL_FUNC_3,    KC_B,                                           KC_N,           KC_M,           KC_COMMA,       KC_DOT,         KC_SLASH,       KC_RIGHT_SHIFT, 
     KC_LEFT_CTRL,   CW_TOGG,        KC_LEFT_ALT,    KC_LEFT,        KC_RIGHT,       RGB_MODE_FORWARD,                                                                                                RSFT(KC_RIGHT_ALT),KC_UP,          KC_DOWN,        KC_LBRC,        KC_RBRC,        KC_RIGHT_CTRL,  
@@ -307,21 +306,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
           register_code16(KC_DQUO);
         } else {
           unregister_code16(KC_DQUO);
-        }  
-      }  
-      return false;
-    case DUAL_FUNC_6:
-      if (record->tap.count > 0) {
-        if (record->event.pressed) {
-          register_code16(KC_LEFT_GUI);
-        } else {
-          unregister_code16(KC_LEFT_GUI);
-        }
-      } else {
-        if (record->event.pressed) {
-          register_code16(KC_LEFT_ALT);
-        } else {
-          unregister_code16(KC_LEFT_ALT);
         }  
       }  
       return false;
