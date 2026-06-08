@@ -195,11 +195,20 @@ do_flash() {
 #     `./build.sh` WITHOUT `fetch` so your edits aren't overwritten.
 case "${1:-}" in
   "")
+    fetch_oryx
     ensure_qmk_firmware
     copy_keymap
     do_build
     ;;
   build)
+    ensure_qmk_firmware
+    copy_keymap
+    do_build
+    ;;
+  qmk)
+    # Build without fetching from Oryx — use this when you've edited
+    # QMK code (custom keycodes, RGB tweaks, etc.) directly in
+    # nvWgW/keymap.c and don't want Oryx to overwrite your changes.
     ensure_qmk_firmware
     copy_keymap
     do_build
@@ -218,11 +227,12 @@ case "${1:-}" in
     do_flash
     ;;
   *)
-    echo "Usage: $0 [build|fetch|flash]"
+    echo "Usage: $0 [build|qmk|fetch|flash]"
     echo ""
-    echo "  no args    - Build only using local keymap (DEFAULT, safe for custom edits)"
-    echo "  build      - Build only (same as no args)"
-    echo "  fetch      - Fetch latest Oryx layout, then build (overwrites local keymap.c)"
+    echo "  no args    - Fetch latest Oryx layout + build (DEFAULT — use after editing in Oryx)"
+    echo "  build      - Same as no args (alias)"
+    echo "  qmk        - Build WITHOUT fetching from Oryx (use after editing QMK code directly)"
+    echo "  fetch      - Same as no args (alias)"
     echo "  flash      - Fetch Oryx + build + open Keymapp"
     exit 1
     ;;
