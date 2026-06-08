@@ -76,70 +76,39 @@ PATCHES = [
         "idempotency_check": "static tap dance_state[2];",
     },
     # --------------------------------------------------------------
-    # Patch 5: Add DANCE_1 function bodies + register in actions array
-    # This is the big one — the function definitions + the tap_dance_actions entry.
+    # Patch 5: Add modifier-on-hold to DANCE_1's DOUBLE_HOLD case
+    # Oryx regenerates DANCE_1 with just layer_on(1) on DOUBLE_HOLD.
+    # This patch adds Ctrl+Shift+Option held on DOUBLE_HOLD.
     # --------------------------------------------------------------
     {
-        "description": "Add DANCE_1 function bodies and register in tap_dance_actions",
-        "find": "tap_dance_action_t tap_dance_actions[] = {\n        [DANCE_0] = ACTION_TAP_DANCE_FN_ADVANCED(on_dance_0, dance_0_finished, dance_0_reset),\n};",
-        "replace": """void on_dance_1(tap_dance_state_t *state, void *user_data);
-void dance_1_finished(tap_dance_state_t *state, void *user_data);
-void dance_1_reset(tap_dance_state_t *state, void *user_data);
-
-// DANCE_1 — left thumb 3rd button
-//   single tap       = Hyper (Cmd+Ctrl+Shift+Alt, all 4)
-//   single hold      = Hyper held down
-//   double tap       = Hyper (same)
-//   double tap+hold  = Ctrl+Shift+Option held + momentary switch to layer 1
-//   release from any = back to base state
-// Re-applied by patches/apply_patches.py after Oryx syncs.
-void on_dance_1(tap_dance_state_t *state, void *user_data) {
-    if (state->count >= 3) {
-        tap_code16(KC_HYPR);
-    }
-}
-
-void dance_1_finished(tap_dance_state_t *state, void *user_data) {
-    dance_state[1].step = dance_step(state);
-    switch (dance_state[1].step) {
-        case SINGLE_TAP:
-        case SINGLE_HOLD:
-        case DOUBLE_TAP:
-            register_code16(KC_HYPR);
-            break;
-        case DOUBLE_HOLD:
-            register_mods(MOD_LCTL | MOD_LSFT | MOD_LALT);
+        "description": "Add Ctrl+Shift+Option to DANCE_1's DOUBLE_HOLD case",
+        "find": "case DOUBLE_HOLD: layer_on(1); break;",
+        "replace": """case DOUBLE_HOLD:
+            // Modified by patches/apply_patches.py — also hold Ctrl+Shift+Option
+            // so the next keypress can use those modifiers while on layer 1.
+            register_code(KC_LCTL);
+            register_code(KC_LSFT);
+            register_code(KC_LALT);
             layer_on(1);
-            break;
-        case DOUBLE_SINGLE_TAP:
-            tap_code16(KC_HYPR);
-            register_code16(KC_HYPR);
-            break;
-    }
-}
-
-void dance_1_reset(tap_dance_state_t *state, void *user_data) {
-    wait_ms(10);
-    switch (dance_state[1].step) {
-        case SINGLE_TAP:
-        case SINGLE_HOLD:
-        case DOUBLE_TAP:
-        case DOUBLE_SINGLE_TAP:
-            unregister_code16(KC_HYPR);
-            break;
-        case DOUBLE_HOLD:
-            unregister_mods(MOD_LCTL | MOD_LSFT | MOD_LALT);
-            layer_off(1);
-            break;
-    }
-    dance_state[1].step = 0;
-}
-
-tap_dance_action_t tap_dance_actions[] = {
-        [DANCE_0] = ACTION_TAP_DANCE_FN_ADVANCED(on_dance_0, dance_0_finished, dance_0_reset),
-        [DANCE_1] = ACTION_TAP_DANCE_FN_ADVANCED(on_dance_1, dance_1_finished, dance_1_reset),
-};""",
-        "idempotency_check": "[DANCE_1] = ACTION_TAP_DANCE_FN_ADVANCED(on_dance_1, dance_1_finished, dance_1_reset),",
+            break;""",
+        "idempotency_check": "register_code(KC_LCTL);",
+    },
+    # --------------------------------------------------------------
+    # Patch 6: Remove modifiers on DANCE_1's DOUBLE_HOLD release
+    # Pairs with Patch 5.
+    # --------------------------------------------------------------
+    {
+        "description": "Release Ctrl+Shift+Option when DANCE_1 DOUBLE_HOLD ends",
+        "find": "              case DOUBLE_HOLD:\n                layer_off(1);\n                break;",
+        "replace": """              case DOUBLE_HOLD:
+                // Modified by patches/apply_patches.py — release the modifiers
+                // we registered in the finished callback.
+                unregister_code(KC_LCTL);
+                unregister_code(KC_LSFT);
+                unregister_code(KC_LALT);
+                layer_off(1);
+                break;""",
+        "idempotency_check": "unregister_code(KC_LCTL);\n                unregister_code(KC_LSFT);",
     },
 ]
 
