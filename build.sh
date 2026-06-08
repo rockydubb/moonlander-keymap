@@ -181,17 +181,31 @@ do_flash() {
 ###############################
 # Main
 ###############################
-# Default behavior: fetch latest Oryx layout, then build.
-# Pass "build" to skip the Oryx fetch (use the keymap you already have locally).
+# Default behavior: build only, using the local keymap you have on disk.
+# Pass "fetch" to pull the latest Oryx layout first (this OVERWRITES the
+# local keymap.c with the Oryx-emitted version, so any local customizations
+# to keymap.c will be lost unless you re-apply them after the fetch).
 # Pass "flash" to also open Keymapp after the build.
+#
+# Workflow recommendation:
+#   - Edit in Oryx web UI -> compile -> run `./build.sh fetch` (re-fetches
+#     the keymap, may need rebase/merge) -> run `./build.sh` (builds).
+#   - For QMK-specific tweaks (custom keycodes, RGB effects, etc.) that
+#     Oryx doesn't support, edit nvWgW/keymap.c directly and run
+#     `./build.sh` WITHOUT `fetch` so your edits aren't overwritten.
 case "${1:-}" in
   "")
-    fetch_oryx
     ensure_qmk_firmware
     copy_keymap
     do_build
     ;;
   build)
+    ensure_qmk_firmware
+    copy_keymap
+    do_build
+    ;;
+  fetch)
+    fetch_oryx
     ensure_qmk_firmware
     copy_keymap
     do_build
@@ -204,11 +218,12 @@ case "${1:-}" in
     do_flash
     ;;
   *)
-    echo "Usage: $0 [build|flash]"
+    echo "Usage: $0 [build|fetch|flash]"
     echo ""
-    echo "  no args    - Fetch latest Oryx layout + build (DEFAULT)"
-    echo "  build      - Build only (skip Oryx fetch, use local keymap)"
-    echo "  flash      - Fetch + build + open Keymapp"
+    echo "  no args    - Build only using local keymap (DEFAULT, safe for custom edits)"
+    echo "  build      - Build only (same as no args)"
+    echo "  fetch      - Fetch latest Oryx layout, then build (overwrites local keymap.c)"
+    echo "  flash      - Fetch Oryx + build + open Keymapp"
     exit 1
     ;;
 esac

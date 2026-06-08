@@ -73,7 +73,16 @@ RGB hsv_to_rgb_with_value(HSV hsv) {
 }
 
 void keyboard_post_init_user(void) {
-  rgb_matrix_enable();
+  // Force RGB animation on layer 0, bypassing the Oryx ledmap[] static
+  // colors. The Oryx keymap sets up a static color override for each
+  // layer, which clobbers any QMK animation effect on every matrix scan.
+  // By disabling layer-LED overrides and forcing a specific animation
+  // mode at boot, the user can use the "Switch ANI" / "Animation" key
+  // (RGB_MODE_FORWARD) to cycle through QMK animation effects.
+  keyboard_config.disable_layer_led = true;
+  eeconfig_update_kb(keyboard_config.raw);
+  rgb_matrix_enable_noeeprom();
+  rgb_matrix_mode_noeeprom(6);  // CYCLE_LEFT_RIGHT (rainbow sweep)
 }
 
 const uint8_t PROGMEM ledmap[][RGB_MATRIX_LED_COUNT][3] = {
