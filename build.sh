@@ -91,6 +91,13 @@ fetch_oryx() {
   # not in the zip (e.g. autocorrect_dict.txt)
   cp -r "${source_dir}/." "${SCRIPT_DIR}/${KEYMAP}/"
 
+  # Re-apply custom QMK snippets that Oryx's regeneration wiped out
+  # (RGB animation on boot, DANCE_1 tap dance for the left thumb 3rd
+  # button, etc.). The script is idempotent — re-running it does
+  # nothing if the patches are already in place.
+  echo "  Applying custom QMK patches..."
+  python3 patches/apply_patches.py
+
   rm -rf "${tmp_zip}" "${tmp_dir}"
   echo "  ✓ Oryx layout fetched and merged into ${KEYMAP}/"
 }

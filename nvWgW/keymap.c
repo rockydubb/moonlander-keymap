@@ -16,14 +16,17 @@ enum custom_keycodes {
 
 enum tap_dance_codes {
   DANCE_0,
+  DANCE_1,
 };
 
-#define DUAL_FUNC_0 LT(14, KC_F)
-#define DUAL_FUNC_1 LT(1, KC_F11)
-#define DUAL_FUNC_2 LT(9, KC_F10)
-#define DUAL_FUNC_3 LT(7, KC_G)
-#define DUAL_FUNC_4 LT(7, KC_W)
-#define DUAL_FUNC_5 LT(5, KC_L)
+#define DUAL_FUNC_0 LT(10, KC_M)
+#define DUAL_FUNC_1 LT(12, KC_L)
+#define DUAL_FUNC_2 LT(9, KC_F16)
+#define DUAL_FUNC_3 LT(14, KC_F1)
+#define DUAL_FUNC_4 LT(13, KC_H)
+#define DUAL_FUNC_5 LT(15, KC_H)
+#define DUAL_FUNC_6 LT(8, KC_R)
+#define DUAL_FUNC_7 LT(7, KC_N)
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [0] = LAYOUT_moonlander(
@@ -32,7 +35,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ALL_T(KC_CAPS), KC_A,           KC_S,           KC_D,           KC_F,           KC_G,           KC_EQUAL,                                                                       TO(2),          KC_H,           KC_J,           KC_K,           KC_L,           LT(2, KC_SCLN), MT(MOD_LGUI, KC_ENTER),
     KC_LEFT_SHIFT,  DUAL_FUNC_0,    DUAL_FUNC_1,    DUAL_FUNC_2,    DUAL_FUNC_3,    KC_B,                                           KC_N,           KC_M,           KC_COMMA,       KC_DOT,         KC_SLASH,       KC_RIGHT_SHIFT, 
     KC_LEFT_CTRL,   CW_TOGG,        KC_LEFT_ALT,    KC_LEFT,        KC_RIGHT,       RGB_MODE_FORWARD,                                                                                                RSFT(KC_RIGHT_ALT),KC_UP,          KC_DOWN,        KC_LBRC,        KC_RBRC,        KC_RIGHT_CTRL,  
-    KC_SPACE,       KC_LEFT_ALT,    KC_LEFT_GUI,                    KC_LEFT_ALT,    KC_TAB,         KC_SPACE
+    KC_LEFT_GUI,    KC_LEFT_ALT,    TD(DANCE_1),                    KC_LEFT_ALT,    KC_TAB,         KC_SPACE
   ),
   [1] = LAYOUT_moonlander(
     KC_ESCAPE,      KC_F1,          KC_F2,          KC_F3,          KC_F4,          KC_F5,          KC_TRANSPARENT,                                 KC_TRANSPARENT, KC_F6,          KC_F7,          KC_F8,          KC_F9,          KC_F10,         KC_F11,         
@@ -46,9 +49,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     AU_TOGG,        KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT,                                 KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, QK_BOOT,        
     KC_TRANSPARENT, KC_TRANSPARENT, KC_MS_BTN1,     KC_MS_UP,       KC_MS_BTN2,     KC_TRANSPARENT, KC_TRANSPARENT,                                 TO(1),          KC_TRANSPARENT, KC_MS_BTN1,     KC_MS_UP,       KC_MS_BTN2,     KC_TRANSPARENT, KC_TRANSPARENT, 
     MU_NEXT,        KC_TRANSPARENT, KC_MS_LEFT,     KC_MS_DOWN,     KC_MS_RIGHT,    KC_TRANSPARENT, KC_TRANSPARENT,                                                                 TO(0),          KC_TRANSPARENT, KC_MS_LEFT,     KC_MS_DOWN,     KC_MS_RIGHT,    KC_TRANSPARENT, KC_MEDIA_PLAY_PAUSE,
-    KC_TRANSPARENT, KC_TRANSPARENT, KC_UP,          KC_TRANSPARENT, KC_DOWN,        KC_TRANSPARENT,                                 KC_TRANSPARENT, KC_MS_WH_UP,    KC_TRANSPARENT, KC_MS_WH_DOWN,  KC_TRANSPARENT, KC_MEDIA_PREV_TRACK,
+    KC_TRANSPARENT, KC_TRANSPARENT, KC_MS_WH_UP,    KC_TRANSPARENT, KC_MS_WH_DOWN,  KC_TRANSPARENT,                                 KC_TRANSPARENT, KC_MS_WH_UP,    KC_TRANSPARENT, KC_MS_WH_DOWN,  KC_TRANSPARENT, KC_MEDIA_PREV_TRACK,
     KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT, KC_MS_BTN1,     KC_MS_BTN2,     KC_TRANSPARENT,                                                                                                 KC_TRANSPARENT, KC_HOME,        KC_END,         KC_AUDIO_MUTE,  KC_TRANSPARENT, KC_MEDIA_NEXT_TRACK,
-    KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT,                 KC_TRANSPARENT, KC_TRANSPARENT, KC_WWW_BACK
+    DUAL_FUNC_6,    DUAL_FUNC_7,    KC_TRANSPARENT,                 KC_TRANSPARENT, KC_WWW_BACK,    KC_WWW_FORWARD
   ),
   [3] = LAYOUT_moonlander(
     KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,                                          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,          KC_NO,          
@@ -79,6 +82,7 @@ void keyboard_post_init_user(void) {
   // By disabling layer-LED overrides and forcing a specific animation
   // mode at boot, the user can use the "Switch ANI" / "Animation" key
   // (RGB_MODE_FORWARD) to cycle through QMK animation effects.
+  // This snippet is re-applied by patches/apply_patches.py after Oryx syncs.
   keyboard_config.disable_layer_led = true;
   eeconfig_update_kb(keyboard_config.raw);
   rgb_matrix_enable_noeeprom();
@@ -154,7 +158,7 @@ enum {
     MORE_TAPS            
 };
 
-static tap dance_state[1];
+static tap dance_state[2];
 
 uint8_t dance_step(tap_dance_state_t *state);
 
@@ -209,8 +213,62 @@ void dance_0_reset(tap_dance_state_t *state, void *user_data) {
     dance_state[0].step = 0;
 }
 
+void on_dance_1(tap_dance_state_t *state, void *user_data);
+void dance_1_finished(tap_dance_state_t *state, void *user_data);
+void dance_1_reset(tap_dance_state_t *state, void *user_data);
+
+// DANCE_1 — left thumb 3rd button
+//   single tap       = Hyper (Cmd+Ctrl+Shift+Alt, all 4)
+//   single hold      = Hyper held down
+//   double tap       = Hyper (same)
+//   double tap+hold  = Ctrl+Shift+Option held + momentary switch to layer 1
+//   release from any = back to base state
+// Re-applied by patches/apply_patches.py after Oryx syncs.
+void on_dance_1(tap_dance_state_t *state, void *user_data) {
+    if (state->count >= 3) {
+        tap_code16(KC_HYPR);
+    }
+}
+
+void dance_1_finished(tap_dance_state_t *state, void *user_data) {
+    dance_state[1].step = dance_step(state);
+    switch (dance_state[1].step) {
+        case SINGLE_TAP:
+        case SINGLE_HOLD:
+        case DOUBLE_TAP:
+            register_code16(KC_HYPR);
+            break;
+        case DOUBLE_HOLD:
+            register_mods(MOD_LCTL | MOD_LSFT | MOD_LALT);
+            layer_on(1);
+            break;
+        case DOUBLE_SINGLE_TAP:
+            tap_code16(KC_HYPR);
+            register_code16(KC_HYPR);
+            break;
+    }
+}
+
+void dance_1_reset(tap_dance_state_t *state, void *user_data) {
+    wait_ms(10);
+    switch (dance_state[1].step) {
+        case SINGLE_TAP:
+        case SINGLE_HOLD:
+        case DOUBLE_TAP:
+        case DOUBLE_SINGLE_TAP:
+            unregister_code16(KC_HYPR);
+            break;
+        case DOUBLE_HOLD:
+            unregister_mods(MOD_LCTL | MOD_LSFT | MOD_LALT);
+            layer_off(1);
+            break;
+    }
+    dance_state[1].step = 0;
+}
+
 tap_dance_action_t tap_dance_actions[] = {
         [DANCE_0] = ACTION_TAP_DANCE_FN_ADVANCED(on_dance_0, dance_0_finished, dance_0_reset),
+        [DANCE_1] = ACTION_TAP_DANCE_FN_ADVANCED(on_dance_1, dance_1_finished, dance_1_reset),
 };
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
@@ -319,6 +377,36 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
           register_code16(KC_DQUO);
         } else {
           unregister_code16(KC_DQUO);
+        }  
+      }  
+      return false;
+    case DUAL_FUNC_6:
+      if (record->tap.count > 0) {
+        if (record->event.pressed) {
+          register_code16(KC_MS_BTN1);
+        } else {
+          unregister_code16(KC_MS_BTN1);
+        }
+      } else {
+        if (record->event.pressed) {
+          register_code16(KC_MS_BTN2);
+        } else {
+          unregister_code16(KC_MS_BTN2);
+        }  
+      }  
+      return false;
+    case DUAL_FUNC_7:
+      if (record->tap.count > 0) {
+        if (record->event.pressed) {
+          register_code16(KC_MS_WH_DOWN);
+        } else {
+          unregister_code16(KC_MS_WH_DOWN);
+        }
+      } else {
+        if (record->event.pressed) {
+          register_code16(KC_MS_WH_UP);
+        } else {
+          unregister_code16(KC_MS_WH_UP);
         }  
       }  
       return false;
