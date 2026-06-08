@@ -110,6 +110,18 @@ PATCHES = [
                 break;""",
         "idempotency_check": "unregister_code(KC_LCTL);\n                unregister_code(KC_LSFT);",
     },
+    # --------------------------------------------------------------
+    # Patch 7: Add SINGLE_HOLD case to DANCE_1's reset function
+    # Without this, holding the key (which QMK classifies as SINGLE_HOLD)
+    # registers Hyper but never unregisters it, leaving the modifier
+    # stuck on in the host.
+    # --------------------------------------------------------------
+    {
+        "description": "Add SINGLE_HOLD case to DANCE_1 reset (was missing, caused stuck Hyper)",
+        "find": "        case SINGLE_TAP: unregister_code16(KC_HYPR); break;\n        case DOUBLE_TAP: unregister_code16(KC_HYPR); break;\n              case DOUBLE_HOLD:",
+        "replace": "        case SINGLE_TAP:\n        case SINGLE_HOLD: unregister_code16(KC_HYPR); break;\n        case DOUBLE_TAP: unregister_code16(KC_HYPR); break;\n              case DOUBLE_HOLD:",
+        "idempotency_check": "case SINGLE_HOLD: unregister_code16(KC_HYPR);",
+    },
 ]
 
 
