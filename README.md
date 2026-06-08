@@ -13,8 +13,12 @@ ZSA Oryx layout. Built using a forked [ZSA blog recipe](https://blog.zsa.io/oryx
 ./build.sh flash
 ```
 
-The .bin output goes to `qmk_firmware/zsa_moonlander_reva_nvWgW.bin`. Drag it into
-[Keymapp](https://www.zsa.io/flash) to flash.
+The .bin output goes to `zsa_moonlander_reva_nvWgW.bin` in the repo
+root. Drag it into [Keymapp](https://www.zsa.io/flash) to flash.
+
+## Documentation
+
+See `docs/` for detailed guides. Start with [`docs/README.md`](docs/README.md) for the index.
 
 ## Layout
 
