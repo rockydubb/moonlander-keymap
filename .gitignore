@@ -1,2 +1,8 @@
+# IDE
 .idea
 *.iml
+.DS_Store
+
+# QMK firmware source — pulled from zsa/qmk_firmware, do not commit
+# (keep the directory in the repo for local builds, but git-ignore its contents)
+qmk_firmware/

@@ -78,16 +78,16 @@ jobs:
           git merge -Xignore-all-space oryx
           git push
 
-      - name: Update QMK firmware submodule to latest version (${{ steps.download-layout-source.outputs.firmware_version }})
+      - name: Clone ZSA QMK firmware (zsa/qmk_firmware, branch firmware${{ steps.download-layout-source.outputs.firmware_version }})
         run: |
-          git submodule update --init --remote --depth=1 --no-single-branch
+          # The qmk_firmware/ directory in this repo is gitignored — we fetch
+          # the upstream ZSA fork fresh on every build so we always get the
+          # matching firmware version pinned by Oryx.
+          rm -rf qmk_firmware
+          git clone --depth=1 --branch firmware${{ steps.download-layout-source.outputs.firmware_version }} https://github.com/zsa/qmk_firmware.git qmk_firmware
           cd qmk_firmware
-          git checkout -B firmware${{ steps.download-layout-source.outputs.firmware_version }} origin/firmware${{ steps.download-layout-source.outputs.firmware_version }}
-          git submodule update --init --recursive
-          cd ..
-          git add qmk_firmware
-          git commit -m "✨(qmk): Update firmware" || echo "No QMK change"
-          git push
+          git submodule update --init --depth=1
+          echo "ZSA QMK firmware cloned (branch firmware${{ steps.download-layout-source.outputs.firmware_version }})"
 
       - name: Build qmk docker image
         run: docker build -t qmk .
