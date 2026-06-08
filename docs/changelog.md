@@ -4,6 +4,27 @@ What changed in the repo, in reverse chronological order.
 
 ## 2026-06-08
 
+### Auto-patch system for Oryx-vs-local-edits survival
+
+Added `patches/apply_patches.py` and wired it into `build.sh` to run
+after every Oryx fetch. The patcher re-applies any custom QMK snippets
+that Oryx's regeneration wiped out, so your customizations survive
+syncs automatically.
+
+Currently 5 patches:
+- RGB animation on boot (`keyboard_post_init_user()`)
+- DANCE_1 to `tap_dance_codes` enum
+- Left thumb 3rd button wired to `TD(DANCE_1)`
+- `dance_state` array sized to 2
+- DANCE_1 function bodies and tap_dance_actions entry
+
+The patcher is idempotent — re-running it does nothing if the patches
+are already in place. New snippets can be added by appending to the
+`PATCHES` list in `apply_patches.py`.
+
+**Workflow is now fully self-sustaining:** edit in Oryx → run
+`./build.sh` → flash. No need to manually re-apply snippets.
+
 ### Made "fetch Oryx" the default build behavior
 
 The default for `./build.sh` (no args) is now "fetch latest Oryx

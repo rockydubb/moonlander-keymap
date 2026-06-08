@@ -8,6 +8,7 @@
 | `github-actions-explained.md` | What GitHub Actions is in plain English |
 | `custom-features.md` | All 7 DUAL_FUNC keys, tap dance, caps word, autocorrect, RGB, layers — what each does |
 | `keymap-folder.md` | What's in `nvWgW/`, when to edit what, how to add a new custom keycode |
+| `patch-system.md` | The auto-patcher that re-applies custom QMK snippets after Oryx syncs |
 | `git-troubleshooting.md` | Common git problems: rebase conflicts, merge conflicts, recovering from mistakes |
 | `changelog.md` | What changed in the repo over time |
 

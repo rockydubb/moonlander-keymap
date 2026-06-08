@@ -26,12 +26,15 @@ What this does (in order):
 1. Calls ZSA's servers, fetches the latest version of your Oryx layout
 2. Drops the new keymap.c into `nvWgW/`, replacing Oryx-generated
    content
-3. Clones `zsa/qmk_firmware` at the version Oryx targeted (only on
+3. **Runs `patches/apply_patches.py` to re-apply your custom QMK
+   snippets** (RGB animation, DANCE_1 tap dance, etc.)
+4. Clones `zsa/qmk_firmware` at the version Oryx targeted (only on
    first run, or if `qmk_firmware/` was deleted)
-4. Compiles with `qmk compile`
-5. Drops `zsa_moonlander_reva_nvWgW.bin` in the repo root
+5. Compiles with `qmk compile`
+6. Drops `zsa_moonlander_reva_nvWgW.bin` in the repo root
 
-Takes 30-90 seconds. Watch the terminal for errors.
+Takes 30-90 seconds. Watch the terminal for the "Applied N patch(es)"
+message to confirm your custom snippets are still in.
 
 ### 3. Flash
 

@@ -21,6 +21,12 @@ The whole workflow is **3 steps**, all from VS Code's terminal:
 The .bin output goes to `zsa_moonlander_reva_nvWgW.bin` in the repo
 root. Keymapp's firmware picker auto-finds it.
 
+**The build script automatically re-applies your custom QMK snippets
+(RGB animation, DANCE_1 tap dance, etc.) after Oryx syncs.** You don't
+have to remember to do anything special. See
+[Custom QMK snippets and the patch system](#custom-qmk-snippets-and-the-patch-system)
+below.
+
 ## Commands
 
 | Command | What it does | When to use |
@@ -146,6 +152,71 @@ that file get overwritten on the next `./build.sh fetch`.
 The current state of `nvWgW/keymap.c` after a `./build.sh` is always
 "Oryx's latest + my QMK additions if I used `qmk`."
 
+## Custom QMK snippets and the patch system
+
+The "gotcha" above is solved by a small auto-patcher: every time
+`./build.sh` runs, it calls `patches/apply_patches.py` after the Oryx
+fetch. The patcher re-applies any QMK snippets Oryx wiped out, so your
+customizations always survive syncs.
+
+### What gets re-applied
+
+| Patch | What it does |
+|---|---|
+| RGB animation on boot | Disables the Oryx ledmap[] override, forces CYCLE_LEFT_RIGHT animation on layer 0 |
+| DANCE_1 tap dance | Hyper tap / double-tap-hold = Ctrl+Shift+Opt + momentary layer 1 |
+| Left thumb 3rd button | Wires the button to `TD(DANCE_1)` |
+| dance_state array | Sized to hold state for both DANCE_0 and DANCE_1 |
+| DANCE_1 function bodies | Registers the on_dance_1/dance_1_finished/dance_1_reset functions |
+
+The patcher is **idempotent** — running it on a file that already has
+the patches does nothing. So you can run `./build.sh` repeatedly
+without accumulating duplicate code.
+
+### Verifying the patcher ran
+
+When you run `./build.sh`, you'll see:
+
+```
+▶ Fetching latest Oryx layout for nvWgW (moonlander/reva)...
+  ...
+  Unzipping into nvWgW/...
+  Applying custom QMK patches...
+Applied 5 patch(es):
+  ✓ Force RGB animation on boot (disable Oryx ledmap[] override)
+  ✓ Add DANCE_1 to tap_dance_codes enum
+  ✓ Wire left thumb 3rd button to TD(DANCE_1)
+  ✓ Resize dance_state array to size 2
+  ✓ Add DANCE_1 function bodies and register in tap_dance_actions
+```
+
+If the patches are already applied, you'll see "No patches needed"
+instead. Either way, the build proceeds with your custom code in
+place.
+
+### Adding a new snippet to the patch system
+
+1. Edit `patches/apply_patches.py`
+2. Add a new entry to the `PATCHES` list:
+
+   ```python
+   {
+       "description": "My new tap dance on right thumb",
+       "find": "KC_RGUI,    KC_RALT,    KC_RGUI,                    KC_RALT,    KC_TAB,         KC_ENT",
+       "replace": "KC_RGUI,    KC_RALT,    TD(DANCE_2),                KC_RALT,    KC_TAB,         KC_ENT",
+       "idempotency_check": "TD(DANCE_2),                KC_RALT,    KC_TAB,         KC_ENT",
+   },
+   ```
+
+3. Run `./build.sh` — the new patch will be applied
+4. Commit and push
+
+The patcher is dumb (literal string find-and-replace), so make sure
+your `find` string is unique enough to not match elsewhere in the
+file. If Oryx ever changes the surrounding code, the patch will fail
+to apply and you'll see a warning — update the `find` string to
+match the new Oryx output and re-run.
+
 ## Adding new QMK features
 
 To enable a new QMK feature, add the corresponding `*_ENABLE = yes`
@@ -200,6 +271,8 @@ the most practical approach.
 │   ├── config.h                                   # keyboard config
 │   ├── keymap.json                                # ZSA marker
 │   └── rules.mk                                   # feature flags
+├── patches/                                       # auto-applied QMK snippets (see "patch system")
+│   └── apply_patches.py
 ├── docs/                                          # detailed documentation
 └── qmk_firmware/                                  # ZSA QMK source (gitignored)
 ```
