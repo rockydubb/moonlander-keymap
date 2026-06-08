@@ -2,6 +2,47 @@
 
 What changed in the repo, in reverse chronological order.
 
+## 2026-06-08
+
+### Made "fetch Oryx" the default build behavior
+
+The default for `./build.sh` (no args) is now "fetch latest Oryx
+layout + build", because Rocky's workflow is 95% editing in Oryx.
+Added `./build.sh qmk` for the 5% case where you've edited QMK code
+directly in `nvWgW/keymap.c` and don't want Oryx to overwrite it.
+
+Earlier in the day the default was "build only", which caused confusion
+when Oryx changes didn't show up on the keyboard.
+
+### Force RGB animation on boot
+
+The Oryx keymap's `ledmap[]` static colors were clobbering QMK
+animation effects on every matrix scan, making the "Switch ANI" /
+"Animation" key invisible. Fixed by adding to
+`keyboard_post_init_user()` in `nvWgW/keymap.c`:
+
+```c
+keyboard_config.disable_layer_led = true;
+eeconfig_update_kb(keyboard_config.raw);
+rgb_matrix_enable_noeeprom();
+rgb_matrix_mode_noeeprom(6);  // CYCLE_LEFT_RIGHT (rainbow sweep)
+```
+
+This disables the Oryx layer-LED override system and forces the
+keyboard to boot into the CYCLE_LEFT_RIGHT animation. The
+`RGB_MODE_FORWARD` key now visibly cycles through all QMK animation
+effects. Confirmed working on real hardware.
+
+### Major README + docs rewrite
+
+- Top-level README.md: full rewrite for accuracy. Adds the "Oryx-vs-
+  local-edits gotcha" section, the macOS USB accessory prompt
+  explanation, the 3 build.sh commands table.
+- docs/workflow.md: rewritten to reflect fetch-as-default, expanded
+  the rebase dance with the new "re-apply customizations" step.
+- docs/build.sh.md: rewritten for the 3-command setup.
+- docs/README.md: index updated.
+
 ## 2026-06-07
 
 ### Major refactor: local-first workflow
@@ -10,9 +51,9 @@ Replaced the GitHub Action round-trip with a local `build.sh` script.
 You can now edit in Oryx, run one command, and flash — all without
 waiting on GitHub Actions.
 
-- **Added** `build.sh` — one-command local build. Fetches latest Oryx
-  layout, clones ZSA QMK source if needed, compiles, drops .bin in
-  repo root. Pass `flash` to also open Keymapp.
+- **Added** `build.sh` — one-command local build. Fetches latest
+  Oryx layout, clones ZSA QMK source if needed, compiles, drops .bin
+  in repo root. Pass `flash` to also open Keymapp.
 - **Added** `docs/` folder with explanations of build.sh, GitHub
   Actions, keymap folder, custom features, workflow, and git
   troubleshooting.
@@ -22,15 +63,6 @@ waiting on GitHub Actions.
   `build.sh` and the GitHub Action. `.gitignore` excludes it.
 - **Updated** `.github/workflows/fetch-and-build-layout.yml` to clone
   `zsa/qmk_firmware` directly instead of using a submodule.
-- **Updated** top-level `README.md` with full feature list, quick start,
-  and troubleshooting section.
-- **Updated** `nvWgW/rules.mk` — cleaned up unused feature comments.
-
-### Conflict resolution: rebased local changes on top of Oryx's latest sync
-
-Oryx had made new commits to `main` (new MOUSEKEY settings, new serial
-number, new keymap layout). Pulled them in via rebase, took Oryx's
-versions of the conflicting files, re-applied `AC_TOGG` on top.
 
 ### Verified
 

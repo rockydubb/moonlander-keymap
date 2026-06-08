@@ -24,10 +24,10 @@ In VS Code, open the `moonlander-keymap` folder. In the terminal:
 
 What this does (in order):
 1. Calls ZSA's servers, fetches the latest version of your Oryx layout
-2. Drops the new keymap.c into `nvWgW/`, replacing Oryx-generated content
-   but keeping your custom QMK code (autocorrect, DUAL_FUNC, RGB, etc.)
-3. Clones `zsa/qmk_firmware` at the version Oryx targeted (only on first
-   run, or if `qmk_firmware/` was deleted)
+2. Drops the new keymap.c into `nvWgW/`, replacing Oryx-generated
+   content
+3. Clones `zsa/qmk_firmware` at the version Oryx targeted (only on
+   first run, or if `qmk_firmware/` was deleted)
 4. Compiles with `qmk compile`
 5. Drops `zsa_moonlander_reva_nvWgW.bin` in the repo root
 
@@ -36,11 +36,59 @@ Takes 30-90 seconds. Watch the terminal for errors.
 ### 3. Flash
 
 - Open Keymapp (already installed)
-- Drag `zsa_moonlander_reva_nvWgW.bin` from the repo root onto Keymapp
+- Click **"Select firmware"** — it auto-opens the repo root
+- Pick `zsa_moonlander_reva_nvWgW.bin`
 - Click the flash button
+- macOS may prompt to allow the USB accessory — click Allow
 - Done — your Moonlander has the new layout
 
-Or use `./build.sh flash` which does steps 2 and 3 (build + open Keymapp).
+Or use `./build.sh flash` which does steps 2 and 3 (build + open
+Keymapp).
+
+## The 3 build.sh commands
+
+| Command | What it does | When to use |
+|---|---|---|
+| `./build.sh` | Fetch Oryx + build | **Default.** After editing in Oryx. |
+| `./build.sh qmk` | Build only (no fetch) | After editing QMK code directly in `nvWgW/keymap.c` |
+| `./build.sh flash` | Fetch Oryx + build + open Keymapp | One-shot automation |
+
+**The default is fetch Oryx + build** because Rocky's workflow is
+95% editing in Oryx. For the 5% case where you want to edit QMK code
+directly, use `./build.sh qmk` so Oryx doesn't overwrite your changes.
+
+## The Oryx-vs-local-edits gotcha
+
+**This is the single most important thing to understand.**
+
+When you edit in Oryx, the Oryx server regenerates `nvWgW/keymap.c`
+from scratch. The Oryx regenerator:
+
+- **Always rewrites** the `keymaps[]` array (layer definitions) — Oryx
+  owns this
+- **Usually preserves** custom QMK functions like
+  `keyboard_post_init_user()` — Oryx doesn't know about your code, so
+  it leaves it alone
+- **Has been observed to wipe them** in some cases — see "Animations
+  disappeared" in the troubleshooting section
+
+**What survives Oryx regeneration:**
+- The `keymaps[]` array — Oryx owns this
+- Most of the file's boilerplate
+- The `process_record_user()` function (so your DUAL_FUNC handlers stay)
+- Usually the `keyboard_post_init_user()` function (but not guaranteed)
+
+**What does NOT survive:**
+- Any direct edits to `keymaps[]` (those are conflicts with Oryx)
+- Custom keycode definitions you added to the top of the file
+- Sometimes `keyboard_post_init_user()` (when Oryx regens the whole
+  function from scratch)
+
+**If your custom QMK code disappears after a fetch:**
+
+1. Re-apply the change (see `docs/custom-features.md` for snippets)
+2. Run `./build.sh qmk` to build without re-fetching
+3. Flash
 
 ## Saving your work to GitHub
 
@@ -52,16 +100,15 @@ git commit -m "your message"
 git push origin main
 ```
 
-⚠️ This will fail if Oryx has made new commits to main since your last
-push. See the **Rebase dance** section below.
+This will fail if Oryx has made new commits to main since your last
+push. See **Pushing after Oryx syncs** below.
 
-## The rebase dance (do this every time Oryx syncs to main)
+## Pushing after Oryx syncs
 
-Oryx runs the GitHub Action which merges the latest Oryx layout into the
-`main` branch on GitHub. If you've also made local changes (custom
-keycode additions, autocorrect toggle, etc.), your local `main` and
-GitHub's `main` will diverge. When you `git push`, GitHub will reject
-your push because it's not a fast-forward.
+Oryx runs the GitHub Action which merges the latest Oryx layout into
+the `main` branch on GitHub. If you've also made local changes, your
+local `main` and GitHub's `main` will diverge. When you `git push`,
+GitHub will reject your push because it's not a fast-forward.
 
 **To resolve:**
 
@@ -76,8 +123,10 @@ git pull --rebase origin main
 # Take Oryx's versions (they have the latest content):
 git checkout --theirs nvWgW/config.h nvWgW/keymap.c
 
-# Re-apply any customizations you made (e.g. AC_TOGG):
-# Edit nvWgW/keymap.c — replace KC_F11 with AC_TOGG on layer 1, top-right
+# Re-apply any customizations you made (e.g. AC_TOGG, RGB fix):
+# - Edit nvWgW/keymap.c — replace KC_F11 with AC_TOGG on layer 1, top-right
+# - Edit nvWgW/keymap.c — re-add keyboard_post_init_user() if Oryx wiped it
+#   (see docs/custom-features.md for the snippet)
 
 # Stage and continue
 git add nvWgW/config.h nvWgW/keymap.c

@@ -1,24 +1,38 @@
 # Moonlander Custom QMK Keymap
 
-This is Rocky's personal Moonlander keymap with custom QMK features on top of the
-ZSA Oryx layout. Built using a forked [ZSA blog recipe](https://blog.zsa.io/oryx-custom-qmk-features/).
+Rocky's personal Moonlander keymap with custom QMK features on top of
+the ZSA Oryx layout. Built using a forked [ZSA blog recipe](https://blog.zsa.io/oryx-custom-qmk-features/).
 
 ## Quick start
 
+The whole workflow is **3 steps**, all from VS Code's terminal:
+
 ```bash
-# Build only
+# 1. Edit in Oryx (web UI): https://configure.zsa.io/moonlander
+#    Click "Compile this layout" when done.
+
+# 2. Build locally:
 ./build.sh
 
-# Build and open Keymapp for flashing
-./build.sh flash
+# 3. Flash via Keymapp's "Select firmware" button (auto-opens repo root).
+#    Or use `./build.sh flash` to build and open Keymapp automatically.
 ```
 
 The .bin output goes to `zsa_moonlander_reva_nvWgW.bin` in the repo
-root. Drag it into [Keymapp](https://www.zsa.io/flash) to flash.
+root. Keymapp's firmware picker auto-finds it.
 
-## Documentation
+## Commands
 
-See `docs/` for detailed guides. Start with [`docs/README.md`](docs/README.md) for the index.
+| Command | What it does | When to use |
+|---|---|---|
+| `./build.sh` | Fetch latest Oryx layout + build | **Default.** After editing in Oryx. |
+| `./build.sh qmk` | Build WITHOUT fetching from Oryx | After editing `nvWgW/keymap.c` directly (custom QMK code) |
+| `./build.sh flash` | Fetch Oryx + build + open Keymapp | One-shot automation |
+| `./build.sh fetch` | Same as no args (alias) | If you want to be explicit |
+
+The default behavior (fetch Oryx + build) was set up on 2026-06-08
+because Rocky's workflow is 95% editing in Oryx and 5% editing
+QMK code directly. Use `./build.sh qmk` for the 5% case.
 
 ## Layout
 
@@ -28,85 +42,114 @@ See `docs/` for detailed guides. Start with [`docs/README.md`](docs/README.md) f
 | `qmk_firmware/` | ZSA's QMK firmware fork, gitignored. Cloned automatically by `build.sh` and the GitHub Action. |
 | `.github/workflows/` | GitHub Action that fetches the latest Oryx layout, merges it with your custom code, and builds the firmware. |
 | `build.sh` | One-command local build. |
+| `docs/` | Detailed documentation (workflow, build.sh, GitHub Actions, custom features, etc.) |
 
 ## How the workflow works
 
-Two pieces work together: **Oryx** (for the graphical layout editor) and
-**this repo** (for custom QMK code and the build).
+Three pieces work together: **Oryx** (for the graphical layout editor),
+**GitHub** (for syncing Oryx → your repo), and **your Macbook**
+(for local builds).
 
 ```
 ┌──────────────────┐    ┌──────────────────┐    ┌──────────────────┐
-│  ZSA Oryx Web    │    │  GitHub Action   │    │  Your Macbook    │
-│  (edit layout)   │───▶│  (build & ship)  │◀──▶│  (build.sh)      │
+│  ZSA Oryx Web    │    │  GitHub          │    │  Your Macbook    │
+│  (edit layout)   │───▶│  (auto-sync)     │◀──▶│  (./build.sh)    │
 └──────────────────┘    └──────────────────┘    └──────────────────┘
         │                       │                       │
         ▼                       ▼                       ▼
    Oryx layout          Firmware .bin            Firmware .bin
-   (oryx branch)        (downloadable            (ready to flash
-                         artifact)                via Keymapp)
+   (pushed to            (downloadable            (ready to flash
+    oryx branch)         artifact)                via Keymapp)
 ```
 
-### Edit your layout in Oryx
+### Edit in Oryx
 
 1. Go to https://configure.zsa.io/moonlander
 2. Edit keys, layers, lighting
 3. Click "Compile this layout"
-4. The GitHub Action picks up your changes on next build
+4. (Optional) Run the GitHub Action to sync Oryx → `main`:
+   https://github.com/rockydubb/moonlander-keymap/actions
 
-### Build locally (fastest for iterating)
+### Build locally
 
-```bash
-./build.sh
-# open the .bin in Keymapp and flash
-```
+`./build.sh` does the whole thing — fetches Oryx (or uses local keymap if
+you pass `qmk`), compiles, and drops a .bin in the repo root.
 
-The build script auto-detects the latest ZSA QMK firmware version, clones
-`zsa/qmk_firmware` if needed, and compiles.
+### Build on GitHub
 
-### Build on GitHub (used by Oryx sync)
+If you're away from your Mac, you can build on GitHub:
 
-```bash
-git add .
-git commit -m "your message"
-git push origin main
-```
+1. Push your local changes: `git add . && git commit -m "..." && git push`
+2. Go to the **Actions** tab → **"Fetch and build layout"** → **"Run workflow"**
+3. Wait ~2-3 minutes
+4. Download the artifact zip from the run's page
 
-Then go to the **Actions** tab → **Fetch and build layout** → **Run workflow**.
-Download the artifact zip and flash with Keymapp.
-
-The action:
-1. Fetches the latest Oryx layout via ZSA's GraphQL API
-2. Drops the Oryx files into `nvWgW/` on the `oryx` branch
-3. Merges `oryx` → `main` (preserving your custom code)
-4. Clones `zsa/qmk_firmware` (matching the Oryx-pinned firmware version)
-5. Builds the firmware in a Docker container
-6. Uploads the .bin as a downloadable artifact
+The action fetches the latest Oryx layout, merges it with your custom
+code, and builds the firmware in a Docker container.
 
 ## Custom QMK features
 
 The keymap in `nvWgW/keymap.c` includes:
 
-- **DUAL_FUNC_* keys** — tap one key for a letter, hold for a different key.
-  E.g. tap = `p`, hold = `"`. These are ZSA-Oryx-style custom keycodes that
-  are baked into the firmware (not editable in VIA).
+- **DUAL_FUNC_* keys** — tap one key for a letter, hold for a different
+  key. E.g. tap = `p`, hold = `"`. These are ZSA-Oryx-style custom
+  keycodes that are baked into the firmware (not editable in VIA).
+  - `DUAL_FUNC_0` Z / Cmd+Z (undo)
+  - `DUAL_FUNC_1` X / Cmd+X (cut)
+  - `DUAL_FUNC_2` C / Cmd+C (copy)
+  - `DUAL_FUNC_3` V / Cmd+V (paste)
+  - `DUAL_FUNC_4` Left Cmd / Left Option
+  - `DUAL_FUNC_5` `-` / `+`
+  - `DUAL_FUNC_6` `P` / `"`
 - **TAP_DANCE** — the top-left key on the base layer cycles through
-  `` ` `` and `~` based on tap count.
-- **CAPS_WORD** — `CW_TOGG` on the base layer enables Shift-for-next-word.
-- **AUTOCORRECT** — QMK's built-in autocorrect, toggle with `AC_TOGG` on
-  layer 1 (top-right key).
-- **RGB matrix** — per-key RGB with custom color schemes per layer.
-- **Oryx compatibility module** — `zsa/oryx` is loaded so the Oryx-emitted
-  keymap layers and CSS color schemes work.
+  `` ` `` and `~` based on tap count (1 tap = `~`, 2 taps = `` ` ``).
+- **CAPS_WORD** — `CW_TOGG` on the base layer enables
+  Shift-for-next-word.
+- **AUTOCORRECT** — QMK's built-in autocorrect, toggle with `AC_TOGG`
+  on layer 1 (top-right key, replaced F11).
+- **RGB animations** — layer 0 boots into rainbow-sweep animation
+  (CYCLE_LEFT_RIGHT). Cycle through other QMK animations with the
+  "Switch ANI" / "Animation" key (`RGB_MODE_FORWARD`). Layers 1-3
+  show static Oryx colors.
+- **Oryx compatibility module** — `zsa/oryx` is loaded so the
+  Oryx-emitted keymap layers and CSS color schemes work.
+
+## The Oryx-vs-local-edits gotcha
+
+**This is the single most important thing to understand about this repo.**
+
+When you edit in Oryx and click "Compile this layout", the Oryx server
+regenerates `nvWgW/keymap.c` from scratch. Any local edits you made to
+that file get overwritten on the next `./build.sh fetch`.
+
+**What survives Oryx regeneration:**
+- The `keymaps[]` array (layer definitions) — Oryx owns this
+- Most of the file's boilerplate
+
+**What does NOT survive:**
+- Custom QMK functions like `keyboard_post_init_user()` (the one
+  that forces the RGB animation on boot)
+- Any direct edits to `keymaps[]` (which would be conflicts with Oryx)
+- Custom keycode definitions you added
+
+**Workflow rules:**
+
+1. For layout changes (key positions, layers, lighting colors): **edit
+   in Oryx**, then `./build.sh`. Your changes are safe.
+2. For QMK-specific tweaks (RGB effects, custom keycodes, new
+   features): **edit `nvWgW/keymap.c` directly**, then
+   `./build.sh qmk` (no fetch). Your changes are safe.
+3. If you need to do both: do the Oryx edits first, run `./build.sh`,
+   flash, test. Then add your QMK edits, run `./build.sh qmk`, flash
+   again.
+
+The current state of `nvWgW/keymap.c` after a `./build.sh` is always
+"Oryx's latest + my QMK additions if I used `qmk`."
 
 ## Adding new QMK features
 
-1. Edit `nvWgW/keymap.c` and/or `nvWgW/rules.mk`
-2. Run `./build.sh` to test locally
-3. If it works, commit and push to `main`
-4. The next GitHub Action run will use your updated code
-
-To enable a new QMK feature, add the corresponding `*_ENABLE = yes` line
-to `rules.mk`. Common ones:
+To enable a new QMK feature, add the corresponding `*_ENABLE = yes`
+line to `nvWgW/rules.mk`:
 
 | Feature | rules.mk line | Use |
 |---|---|---|
@@ -127,17 +170,18 @@ to `rules.mk`. Common ones:
 | BASE | 0 | (default) |
 | SYMB | 1 | `TG(1)` — toggle, top middle row |
 | MDIA | 2 | `TO(2)` — switch, top middle row (right) |
+| App Lay 3 | 3 | (app-specific) |
 
 ## Autocorrect notes
 
-Autocorrect is enabled by default at boot. Toggle it on/off with `AC_TOGG`
-on layer 1, top-right key (replaced F11).
+Autocorrect is enabled by default at boot. Toggle it on/off with
+`AC_TOGG` on layer 1, top-right key (replaced F11).
 
-QMK's default English typo dictionary is baked in. To add a custom word
-list (typo → correction pairs), use `qmk generate-autocorrect-data`
-with a text file. Note: most tech terms fail QMK's "must not be substring
-of a real English word" check, so the default dictionary + the
-`AC_TOGG` toggle is usually the most practical approach.
+QMK's default English typo dictionary is baked in. To add a custom
+word list, use `qmk generate-autocorrect-data` with a text file. Most
+tech terms fail QMK's "must not be substring of a real English word"
+check, so the default dictionary + the `AC_TOGG` toggle is usually
+the most practical approach.
 
 ## Files in this repo
 
@@ -152,22 +196,39 @@ of a real English word" check, so the default dictionary + the
 │   └── workflows/
 │       └── fetch-and-build-layout.yml             # Oryx fetch + build action
 ├── nvWgW/                                         # your keymap
-│   ├── keymap.c                                   # C source
+│   ├── keymap.c                                   # C source (Oryx-emitted + QMK custom)
 │   ├── config.h                                   # keyboard config
 │   ├── keymap.json                                # ZSA marker
 │   └── rules.mk                                   # feature flags
+├── docs/                                          # detailed documentation
 └── qmk_firmware/                                  # ZSA QMK source (gitignored)
 ```
 
+## Documentation
+
+See `docs/` for detailed guides. Start with
+[`docs/README.md`](docs/README.md) for the index.
+
 ## Troubleshooting
+
+### Oryx changes don't show up on the keyboard
+
+You probably ran `./build.sh qmk` (or no args, depending on the default)
+but the local `nvWgW/keymap.c` is stale. Run `./build.sh fetch` to pull
+the latest Oryx content, then flash.
+
+### Animations disappeared after an Oryx fetch
+
+Oryx regenerated `keyboard_post_init_user()`. Re-apply the RGB
+animation block (see `docs/custom-features.md` for the snippet),
+then `./build.sh qmk` to keep your edit.
 
 ### Build fails with "Module 'zsa/oryx' not found"
 
-The action clones QMK into `qmk_firmware/`, then the build's `make` reads
-`nvWgW/keymap.json` which references the `zsa/oryx` module. The `zsa/oryx`
-module is bundled inside `zsa/qmk_firmware` under `modules/zsa/`. If you
-cloned upstream `qmk/qmk_firmware` instead, the build will fail. Re-run
-`./build.sh` — it pulls `zsa/qmk_firmware` automatically.
+The `zsa/oryx` module is bundled inside `zsa/qmk_firmware` under
+`modules/zsa/`. If you cloned upstream `qmk/qmk_firmware` instead, the
+build will fail. Re-run `./build.sh` — it pulls `zsa/qmk_firmware`
+automatically.
 
 ### `qmk: command not found`
 
@@ -175,13 +236,12 @@ Install: `brew install qmk/qmk/qmk`
 
 ### Build complains about flash or device
 
-The Moonlander needs to be in bootloader mode to flash. Hold the top-left
-key on the left half while plugging in, OR use Keymapp's "Enter
-bootloader" button.
+The Moonlander needs to be in bootloader mode to flash. Hold the
+top-left key on the left half while plugging in, OR use Keymapp's
+"Enter bootloader" button.
 
-### Layer 1 doesn't show AC_TOGG
+### macOS asks to allow an "accessory" after flashing
 
-Make sure you ran the Oryx sync last (the action's first step pulls
-the latest Oryx layout, which would overwrite your `nvWgW/keymap.c`
-changes if you edit layer 1 in Oryx). When in doubt, edit `nvWgW/keymap.c`
-directly and re-run `./build.sh`.
+That's the Moonlander re-enumerating as a USB device after the flash.
+Harmless. macOS remembers your choice per USB port, so it'll stop
+asking after a few flashes on the same port.
