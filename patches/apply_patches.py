@@ -111,6 +111,25 @@ PATCHES = [
         "idempotency_check": "unregister_code(KC_LCTL);\n                unregister_code(KC_LSFT);",
     },
     # --------------------------------------------------------------
+    # Patch 7: Use tap_code16 for DANCE_1 SINGLE_TAP instead of register_code16
+    # The original uses register_code16, which waits for the reset to
+    # unregister. For a tap (press-release), this can be too fast for
+    # the host to register the press. tap_code16 auto-presses and
+    # releases in one go, which the host reliably sees.
+    # --------------------------------------------------------------
+    {
+        "description": "Change DANCE_1 SINGLE_TAP from register_code16 to tap_code16 for reliable Hyper",
+        "find": "case SINGLE_TAP: register_code16(KC_HYPR); break;",
+        "replace": """case SINGLE_TAP:
+            // Modified by patches/apply_patches.py — use tap_code16 instead
+            // of register_code16 so the host reliably sees the Hyper press.
+            // The original register_code16 + reset pattern is too fast for
+            // a tap-press; the host misses the down event.
+            tap_code16(KC_HYPR);
+            break;""",
+        "idempotency_check": "tap_code16(KC_HYPR);\n            break;\n        case DOUBLE_TAP:",
+    },
+    # --------------------------------------------------------------
     # Patch 7: Add SINGLE_HOLD case to DANCE_1's reset function
     # Without this, holding the key (which QMK classifies as SINGLE_HOLD)
     # registers Hyper but never unregisters it, leaving the modifier
