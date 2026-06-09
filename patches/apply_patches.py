@@ -111,23 +111,71 @@ PATCHES = [
         "idempotency_check": "unregister_code(KC_LCTL);\n                unregister_code(KC_LSFT);",
     },
     # --------------------------------------------------------------
-    # Patch 7: Use tap_code16 for DANCE_1 SINGLE_TAP instead of register_code16
-    # The original uses register_code16, which waits for the reset to
-    # unregister. For a tap (press-release), this can be too fast for
-    # the host to register the press. tap_code16 auto-presses and
-    # releases in one go, which the host reliably sees.
+    # Patch 7: Use HYPR(KC_F18) for DANCE_1 SINGLE_TAP instead of KC_HYPR
+    # macOS doesn't recognize "all 4 mods + no keycode" as a meaningful
+    # keypress — it's just a no-op. Apps that react to "Hyper" (Alfred,
+    # Raycast, Keyboard Maestro, etc.) need a real keycode. F18 and F19
+    # are the standard "Hyper" hotkey keycodes on macOS.
     # --------------------------------------------------------------
     {
-        "description": "Change DANCE_1 SINGLE_TAP from register_code16 to tap_code16 for reliable Hyper",
-        "find": "case SINGLE_TAP: register_code16(KC_HYPR); break;",
-        "replace": """case SINGLE_TAP:
-            // Modified by patches/apply_patches.py — use tap_code16 instead
-            // of register_code16 so the host reliably sees the Hyper press.
-            // The original register_code16 + reset pattern is too fast for
-            // a tap-press; the host misses the down event.
-            tap_code16(KC_HYPR);
-            break;""",
-        "idempotency_check": "tap_code16(KC_HYPR);\n            break;\n        case DOUBLE_TAP:",
+        "description": "Change DANCE_1 SINGLE_TAP to HYPR(KC_F18) so macOS apps recognize it",
+        "find": "        case SINGLE_TAP:\n            // Modified by patches/apply_patches.py — use tap_code16 instead\n            // of register_code16 so the host reliably sees the Hyper press.\n            // The original register_code16 + reset pattern is too fast for\n            // a tap-press; the host misses the down event.\n            tap_code16(KC_HYPR);\n            break;",
+        "replace": "        case SINGLE_TAP:\n            // Modified by patches/apply_patches.py — use HYPR(KC_F18)\n            // (all 4 mods + F18 keycode) so macOS apps like Alfred,\n            // Raycast, Keyboard Maestro recognize it as a Hyper hotkey.\n            // Bare KC_HYPR (mods with no keycode) is a no-op on macOS.\n            tap_code16(HYPR(KC_F18));\n            break;",
+        "idempotency_check": "tap_code16(HYPR(KC_F18));",
+    },
+    # --------------------------------------------------------------
+    # Patch 8: Same fix for SINGLE_HOLD in the finished callback
+    # If the user holds the key, they want the same "Hyper F18" combo
+    # to be held down (so they can tap a key to extend the combo).
+    # Use HYPR(KC_F18) registered, then unregistered in reset.
+    # --------------------------------------------------------------
+    {
+        "description": "Change DANCE_1 SINGLE_HOLD to HYPR(KC_F18) so the held combo is also useful",
+        "find": "        case SINGLE_HOLD: unregister_code16(KC_HYPR); break;",
+        "replace": "        case SINGLE_HOLD: unregister_code16(HYPR(KC_F18)); break;",
+        "idempotency_check": "unregister_code16(HYPR(KC_F18));",
+    },
+    # --------------------------------------------------------------
+    # Patch 9: The 'finished' callback for SINGLE_HOLD also needs to
+    # register HYPR(KC_F18) instead of KC_HYPR. Otherwise the held combo
+    # is still bare mods (no keycode).
+    # Find the original Oryx-emitted SINGLE_HOLD register.
+    # --------------------------------------------------------------
+    {
+        "description": "Change DANCE_1 SINGLE_HOLD register to HYPR(KC_F18) in finished callback",
+        "find": "        case SINGLE_TAP: register_code16(KC_HYPR); break;\n        case SINGLE_HOLD: unregister_code16(KC_HYPR); break;\n        case DOUBLE_TAP: register_code16(KC_HYPR); register_code16(KC_HYPR); break;",
+        "replace": "        case SINGLE_TAP: register_code16(HYPR(KC_F18)); break;\n        case SINGLE_HOLD: unregister_code16(HYPR(KC_F18)); break;\n        case DOUBLE_TAP: register_code16(HYPR(KC_F18)); register_code16(HYPR(KC_F18)); break;",
+        "idempotency_check": "case SINGLE_TAP: register_code16(HYPR(KC_F18));",
+    },
+    # --------------------------------------------------------------
+    # Patch 10: Update DOUBLE_SINGLE_TAP to also use HYPR(KC_F18)
+    # --------------------------------------------------------------
+    {
+        "description": "Update DANCE_1 DOUBLE_SINGLE_TAP to use HYPR(KC_F18)",
+        "find": "case DOUBLE_SINGLE_TAP: tap_code16(KC_HYPR); register_code16(KC_HYPR);",
+        "replace": "case DOUBLE_SINGLE_TAP: tap_code16(HYPR(KC_F18)); register_code16(HYPR(KC_F18));",
+        "idempotency_check": "tap_code16(HYPR(KC_F18)); register_code16(HYPR(KC_F18));",
+    },
+    # --------------------------------------------------------------
+    # Patch 11: Update on_dance_1 (3+ taps) to use HYPR(KC_F18)
+    # --------------------------------------------------------------
+    {
+        "description": "Update on_dance_1 3+taps case to use HYPR(KC_F18)",
+        "find": "    if(state->count == 3) {\n        tap_code16(KC_HYPR);\n        tap_code16(KC_HYPR);\n        tap_code16(KC_HYPR);\n    }\n    if(state->count > 3) {\n        tap_code16(KC_HYPR);\n    }",
+        "replace": "    if(state->count == 3) {\n        tap_code16(HYPR(KC_F18));\n        tap_code16(HYPR(KC_F18));\n        tap_code16(HYPR(KC_F18));\n    }\n    if(state->count > 3) {\n        tap_code16(HYPR(KC_F18));\n    }",
+        "idempotency_check": "tap_code16(HYPR(KC_F18));\n        tap_code16(HYPR(KC_F18));",
+    },
+    # --------------------------------------------------------------
+    # Patch 12: Update DOUBLE_TAP reset to use HYPR(KC_F18)
+    # Note: Oryx may have already changed the unregister to match the
+    # register (since Oryx regenerates both), so we use a more specific
+    # find string. Skip this patch if DOUBLE_TAP already uses HYPR(KC_F18).
+    # --------------------------------------------------------------
+    {
+        "description": "Update DANCE_1 DOUBLE_TAP unregister to use HYPR(KC_F18)",
+        "find": "        case DOUBLE_TAP: unregister_code16(KC_HYPR); break;",
+        "replace": "        case DOUBLE_TAP: unregister_code16(HYPR(KC_F18)); break;",
+        "idempotency_check": "case DOUBLE_TAP: unregister_code16(HYPR(KC_F18));",
     },
     # --------------------------------------------------------------
     # Patch 7: Add SINGLE_HOLD case to DANCE_1's reset function
