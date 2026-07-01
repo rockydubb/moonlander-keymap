@@ -4,6 +4,25 @@ What changed in the repo, in reverse chronological order.
 
 ## 2026-07-01
 
+### Caps Word, combos, and Autocorrect
+
+Synced the latest Oryx layout after Caps Word was added to the base
+layer, left side bottom row second key. The Oryx-generated source also
+enabled two combos:
+
+- Left Shift + Backspace -> Delete
+- Backspace + Right Ctrl -> Ctrl+Shift+Opt+Cmd+Delete
+
+Enabled QMK Autocorrect in the repo's durable patch flow:
+
+- `AUTOCORRECT_ENABLE = yes` in `nvWgW/rules.mk`
+- `AC_TOGG` on layer 1, top-right key
+- `patches/apply_patches.py` now reapplies the feature flag and toggle
+  key after future Oryx fetches
+
+Verified with `./build.sh qmk`; the build compiled
+`process_autocorrect.c`, `process_caps_word.c`, and `process_combo.c`.
+
 ### Terminal flashing with Zapp
 
 Changed `./build.sh flash` from "build and open Keymapp" to "build and

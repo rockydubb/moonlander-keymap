@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-apply_patches.py — re-apply custom QMK snippets to nvWgW/keymap.c
-after Oryx syncs have wiped them.
+apply_patches.py — re-apply custom QMK snippets to nvWgW files after
+Oryx syncs have wiped them.
 
 Each patch is a (marker, snippet) pair:
 - `marker` is a unique string already in the Oryx-emitted file
@@ -17,7 +17,9 @@ import sys
 import re
 from pathlib import Path
 
-KEYMAP_C = Path(__file__).parent.parent / "nvWgW" / "keymap.c"
+KEYMAP_DIR = Path(__file__).parent.parent / "nvWgW"
+KEYMAP_C = KEYMAP_DIR / "keymap.c"
+RULES_MK = KEYMAP_DIR / "rules.mk"
 
 
 # Each patch: (description, find, replace, require_match)
@@ -48,20 +50,49 @@ PATCHES = [
 }""",
         "idempotency_check": "rgb_matrix_mode_noeeprom(6);",
     },
+    # --------------------------------------------------------------
+    # Patch 2: Autocorrect toggle key
+    # Oryx can regenerate layer 1 with F11 in this slot. Keep the
+    # firmware-level autocorrect toggle in that stable position.
+    # --------------------------------------------------------------
+    {
+        "description": "Map layer 1 top-right key to AC_TOGG",
+        "path": KEYMAP_C,
+        "find": "KC_F10,         KC_F11,",
+        "replace": "KC_F10,         AC_TOGG,",
+        "idempotency_check": "KC_F10,         AC_TOGG,",
+    },
+    # --------------------------------------------------------------
+    # Patch 3: Autocorrect feature flag
+    # Keep AUTOCORRECT_ENABLE on even when Oryx rewrites rules.mk.
+    # --------------------------------------------------------------
+    {
+        "description": "Enable QMK Autocorrect",
+        "path": RULES_MK,
+        "find": "CAPS_WORD_ENABLE = yes\n",
+        "replace": "CAPS_WORD_ENABLE = yes\nAUTOCORRECT_ENABLE = yes\n",
+        "idempotency_check": "AUTOCORRECT_ENABLE = yes",
+    },
 ]
 
 
 def apply_patches():
-    if not KEYMAP_C.exists():
-        print(f"ERROR: {KEYMAP_C} not found", file=sys.stderr)
-        return 1
+    contents = {}
+    original_contents = {}
+    for path in {patch.get("path", KEYMAP_C) for patch in PATCHES}:
+        if not path.exists():
+            print(f"ERROR: {path} not found", file=sys.stderr)
+            return 1
+        contents[path] = path.read_text()
+        original_contents[path] = contents[path]
 
-    content = KEYMAP_C.read_text()
-    original_content = content
     applied = []
     skipped = []
 
     for patch in PATCHES:
+        path = patch.get("path", KEYMAP_C)
+        content = contents[path]
+
         # Idempotency check: if the replacement is already in the file, skip
         if "idempotency_check" in patch and patch["idempotency_check"] in content:
             skipped.append(patch["description"])
@@ -72,11 +103,13 @@ def apply_patches():
             skipped.append(f"{patch['description']} (find string not found — Oryx may have changed the surrounding code)")
             continue
 
-        content = content.replace(patch["find"], patch["replace"], 1)
+        contents[path] = content.replace(patch["find"], patch["replace"], 1)
         applied.append(patch["description"])
 
-    if content != original_content:
-        KEYMAP_C.write_text(content)
+    changed_paths = [path for path, content in contents.items() if content != original_contents[path]]
+    if changed_paths:
+        for path in changed_paths:
+            path.write_text(contents[path])
         print(f"Applied {len(applied)} patch(es):")
         for desc in applied:
             print(f"  ✓ {desc}")

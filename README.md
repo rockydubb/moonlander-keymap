@@ -137,6 +137,9 @@ The keymap in `nvWgW/keymap.c` includes:
   Shift-for-next-word.
 - **AUTOCORRECT** — QMK's built-in autocorrect, toggle with `AC_TOGG`
   on layer 1 (top-right key, replaced F11).
+- **COMBOS** — two Oryx-generated multi-key combos:
+  Left Shift + Backspace = Delete, and Backspace + Right Ctrl =
+  Ctrl+Shift+Opt+Cmd+Delete.
 - **RGB animations** — layer 0 boots into rainbow-sweep animation
   (CYCLE_LEFT_RIGHT). Cycle through other QMK animations with the
   "Switch ANI" / "Animation" key (`RGB_MODE_FORWARD`). Layers 1-3
@@ -188,10 +191,8 @@ customizations always survive syncs.
 | Patch | What it does |
 |---|---|
 | RGB animation on boot | Disables the Oryx ledmap[] override, forces CYCLE_LEFT_RIGHT animation on layer 0 |
-| DANCE_1 tap dance | Hyper tap / double-tap-hold = Ctrl+Shift+Opt + momentary layer 1 |
-| Left thumb 3rd button | Wires the button to `TD(DANCE_1)` |
-| dance_state array | Sized to hold state for both DANCE_0 and DANCE_1 |
-| DANCE_1 function bodies | Registers the on_dance_1/dance_1_finished/dance_1_reset functions |
+| Autocorrect toggle key | Keeps layer 1 top-right mapped to `AC_TOGG` |
+| Autocorrect feature flag | Keeps `AUTOCORRECT_ENABLE = yes` in `rules.mk` |
 
 The patcher is **idempotent** — running it on a file that already has
 the patches does nothing. So you can run `./build.sh` repeatedly
@@ -206,12 +207,10 @@ When you run `./build.sh`, you'll see:
   ...
   Unzipping into nvWgW/...
   Applying custom QMK patches...
-Applied 5 patch(es):
+Applied 3 patch(es):
   ✓ Force RGB animation on boot (disable Oryx ledmap[] override)
-  ✓ Add DANCE_1 to tap_dance_codes enum
-  ✓ Wire left thumb 3rd button to TD(DANCE_1)
-  ✓ Resize dance_state array to size 2
-  ✓ Add DANCE_1 function bodies and register in tap_dance_actions
+  ✓ Map layer 1 top-right key to AC_TOGG
+  ✓ Enable QMK Autocorrect
 ```
 
 If the patches are already applied, you'll see "No patches needed"

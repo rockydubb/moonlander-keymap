@@ -30,8 +30,8 @@ The first key on row 2 of the base layer uses `DANCE_0`, a tap dance:
 ## CAPS_WORD
 
 The `CW_TOGG` key on the base layer (left thumb row) toggles Caps Word
-mode. When enabled, the next typed letter is capitalized and Caps Word
-turns off. Useful for typing "NASA" without holding Shift.
+mode. When enabled, letters are shifted until the current word ends.
+Useful for typing constants like `API_KEY` without holding Shift.
 
 ## AUTOCORRECT
 
@@ -46,6 +46,15 @@ punctuation:
 
 Default English dictionary is in. Toggle OFF when typing code or
 terminal commands to avoid false corrections.
+
+## COMBOS
+
+Two base-layer combos are currently generated from Oryx:
+
+| Combo | Output |
+|---|---|
+| Left Shift + Backspace | Delete |
+| Backspace + Right Ctrl | Ctrl+Shift+Opt+Cmd+Delete |
 
 ## RGB matrix
 

@@ -2,6 +2,8 @@
 .idea
 *.iml
 .DS_Store
+__pycache__/
+*.pyc
 
 # QMK firmware source — pulled from zsa/qmk_firmware, do not commit
 # (keep the directory in the repo for local builds, but git-ignore its contents)
