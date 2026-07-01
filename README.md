@@ -271,11 +271,19 @@ line to `nvWgW/rules.mk`:
 Autocorrect is enabled by default at boot. Toggle it on/off with
 `AC_TOGG` on layer 1, top-right key (replaced F11).
 
-QMK's default English typo dictionary is baked in. To add a custom
-word list, use `qmk generate-autocorrect-data` with a text file. Most
-tech terms fail QMK's "must not be substring of a real English word"
-check, so the default dictionary + the `AC_TOGG` toggle is usually
-the most practical approach.
+No custom dictionary file is required for the current setup. QMK uses
+its built-in default English typo dictionary when `autocorrect_data.h`
+is not present, and the build confirms this with:
+
+```text
+Autocorrect is using the default library.
+```
+
+To add a custom word list later, use `qmk generate-autocorrect-data`
+with a text file. Most tech terms fail QMK's "must not be substring of a
+real English word" check, so the default dictionary + the `AC_TOGG`
+toggle is usually the most practical approach. See
+`docs/autocorrect.md` for the full flow.
 
 ## Files in this repo
 

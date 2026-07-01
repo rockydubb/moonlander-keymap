@@ -44,8 +44,13 @@ punctuation:
 - `adn ` → `and `
 - `hte ` → `the `
 
-Default English dictionary is in. Toggle OFF when typing code or
-terminal commands to avoid false corrections.
+No custom dictionary file is required for the current setup. QMK falls
+back to its built-in default dictionary when `autocorrect_data.h` is not
+present. See `docs/autocorrect.md` for the custom dictionary path if you
+want to add your own corrections later.
+
+Toggle OFF when typing code or terminal commands to avoid false
+corrections.
 
 ## COMBOS
 

@@ -7,6 +7,7 @@
 | `build.sh.md` | What `build.sh` does, the 3 commands, why fetch is the default, troubleshooting |
 | `terminal-flashing.md` | Zapp-based terminal flashing, bootloader handoff, and why Kontroll is not used for reset |
 | `github-actions-explained.md` | What GitHub Actions is in plain English |
+| `autocorrect.md` | Autocorrect toggle, default dictionary behavior, and how to add a custom dictionary later |
 | `custom-features.md` | All 7 DUAL_FUNC keys, tap dance, caps word, autocorrect, RGB, layers — what each does |
 | `keymap-folder.md` | What's in `nvWgW/`, when to edit what, how to add a new custom keycode |
 | `patch-system.md` | The auto-patcher that re-applies custom QMK snippets after Oryx syncs |
@@ -19,8 +20,9 @@
 2. `workflow.md` — the daily flow
 3. `build.sh.md` — the script you'll run all the time
 4. `terminal-flashing.md` — how `./build.sh flash` uses Zapp
-5. `custom-features.md` — what your keymap actually does
-6. `github-actions-explained.md` — what the action is doing in case you ever need to debug it
+5. `autocorrect.md` — how QMK Autocorrect works in this keymap
+6. `custom-features.md` — what your keymap actually does
+7. `github-actions-explained.md` — what the action is doing in case you ever need to debug it
 
 ## The single most important thing to read
 
