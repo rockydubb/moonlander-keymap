@@ -5,9 +5,10 @@
 # (it's gitignored, so it'll need to be re-cloned on a fresh checkout).
 #
 # Usage:
-#   ./build.sh             # build only
-#   ./build.sh fetch       # fetch latest Oryx layout, then build
-#   ./build.sh flash       # build and open Keymapp for flashing
+#   ./build.sh             # fetch latest Oryx layout, then build
+#   ./build.sh qmk         # build only, without fetching from Oryx
+#   ./build.sh flash       # fetch, build, then flash with Zapp
+#   ./build.sh keymapp     # fetch, build, then open Keymapp
 
 set -euo pipefail
 
@@ -167,7 +168,7 @@ do_build() {
 }
 
 ###############################
-# Step 5: open Keymapp
+# Step 5: flash with Zapp
 ###############################
 do_flash() {
   local bin_path="$SCRIPT_DIR/zsa_moonlander_reva_${KEYMAP}.bin"
@@ -175,6 +176,34 @@ do_flash() {
     echo "ERROR: $bin_path not found. Run ./build.sh first." >&2
     exit 1
   fi
+
+  if ! command -v zapp >/dev/null 2>&1; then
+    echo "ERROR: zapp is required for terminal flashing." >&2
+    echo "Install it with: brew install zapp" >&2
+    exit 1
+  fi
+
+  echo ""
+  echo "▶ Flashing with Zapp..."
+  echo "  Firmware: $bin_path"
+  echo "  Zapp will wait until the Moonlander enters bootloader mode."
+  echo "  Put the keyboard in bootloader mode now:"
+  echo "    - press your QK_BOOT key, or"
+  echo "    - press the hardware reset button"
+  echo ""
+  zapp flash "$bin_path"
+}
+
+###############################
+# Step 6: open Keymapp
+###############################
+do_keymapp() {
+  local bin_path="$SCRIPT_DIR/zsa_moonlander_reva_${KEYMAP}.bin"
+  if [[ ! -f "$bin_path" ]]; then
+    echo "ERROR: $bin_path not found. Run ./build.sh first." >&2
+    exit 1
+  fi
+
   echo ""
   echo "▶ Opening Keymapp..."
   if open -a "Keymapp" 2>/dev/null; then
@@ -188,18 +217,15 @@ do_flash() {
 ###############################
 # Main
 ###############################
-# Default behavior: build only, using the local keymap you have on disk.
-# Pass "fetch" to pull the latest Oryx layout first (this OVERWRITES the
-# local keymap.c with the Oryx-emitted version, so any local customizations
-# to keymap.c will be lost unless you re-apply them after the fetch).
-# Pass "flash" to also open Keymapp after the build.
+# Default behavior: fetch the latest Oryx layout, re-apply local patches,
+# then build. Pass "qmk" or "build" to compile the local keymap without
+# fetching from Oryx. Pass "flash" to hand the built firmware to Zapp.
 #
 # Workflow recommendation:
-#   - Edit in Oryx web UI -> compile -> run `./build.sh fetch` (re-fetches
-#     the keymap, may need rebase/merge) -> run `./build.sh` (builds).
+#   - Edit in Oryx web UI -> compile -> run `./build.sh` (fetches and builds).
 #   - For QMK-specific tweaks (custom keycodes, RGB effects, etc.) that
 #     Oryx doesn't support, edit nvWgW/keymap.c directly and run
-#     `./build.sh` WITHOUT `fetch` so your edits aren't overwritten.
+#     `./build.sh qmk` so your edits aren't overwritten.
 case "${1:-}" in
   "")
     fetch_oryx
@@ -233,14 +259,22 @@ case "${1:-}" in
     do_build
     do_flash
     ;;
+  keymapp)
+    fetch_oryx
+    ensure_qmk_firmware
+    copy_keymap
+    do_build
+    do_keymapp
+    ;;
   *)
-    echo "Usage: $0 [build|qmk|fetch|flash]"
+    echo "Usage: $0 [build|qmk|fetch|flash|keymapp]"
     echo ""
     echo "  no args    - Fetch latest Oryx layout + build (DEFAULT — use after editing in Oryx)"
-    echo "  build      - Same as no args (alias)"
+    echo "  build      - Build WITHOUT fetching from Oryx (alias for qmk)"
     echo "  qmk        - Build WITHOUT fetching from Oryx (use after editing QMK code directly)"
     echo "  fetch      - Same as no args (alias)"
-    echo "  flash      - Fetch Oryx + build + open Keymapp"
+    echo "  flash      - Fetch Oryx + build + flash with Zapp"
+    echo "  keymapp    - Fetch Oryx + build + open Keymapp"
     exit 1
     ;;
 esac

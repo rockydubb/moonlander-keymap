@@ -2,6 +2,30 @@
 
 What changed in the repo, in reverse chronological order.
 
+## 2026-07-01
+
+### Terminal flashing with Zapp
+
+Changed `./build.sh flash` from "build and open Keymapp" to "build and
+flash with Zapp." The script now checks for `zapp`, prints clear
+bootloader instructions, and runs:
+
+```bash
+zapp flash zsa_moonlander_reva_nvWgW.bin
+```
+
+Zapp waits while the user presses `QK_BOOT` or the hardware reset
+button, then flashes automatically once the Moonlander appears in
+bootloader mode.
+
+Added `./build.sh keymapp` as a GUI fallback that preserves the old
+Keymapp handoff behavior.
+
+Added `docs/terminal-flashing.md` and updated the README, workflow docs,
+and build script docs to describe the Zapp flow and the current Kontroll
+limitation: Kontroll can inspect/control Keymapp live state, but does
+not expose a bootloader/reset command.
+
 ## 2026-06-08
 
 ### Auto-patch system for Oryx-vs-local-edits survival

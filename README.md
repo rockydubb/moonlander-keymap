@@ -14,12 +14,13 @@ The whole workflow is **3 steps**, all from VS Code's terminal:
 # 2. Build locally:
 ./build.sh
 
-# 3. Flash via Keymapp's "Select firmware" button (auto-opens repo root).
-#    Or use `./build.sh flash` to build and open Keymapp automatically.
+# 3. Flash from the terminal:
+./build.sh flash
+#    Zapp waits for you to press QK_BOOT/reset, then flashes automatically.
 ```
 
 The .bin output goes to `zsa_moonlander_reva_nvWgW.bin` in the repo
-root. Keymapp's firmware picker auto-finds it.
+root.
 
 **The build script automatically re-applies your custom QMK snippets
 (RGB animation, DANCE_1 tap dance, etc.) after Oryx syncs.** You don't
@@ -33,7 +34,8 @@ below.
 |---|---|---|
 | `./build.sh` | Fetch latest Oryx layout + build | **Default.** After editing in Oryx. |
 | `./build.sh qmk` | Build WITHOUT fetching from Oryx | After editing `nvWgW/keymap.c` directly (custom QMK code) |
-| `./build.sh flash` | Fetch Oryx + build + open Keymapp | One-shot automation |
+| `./build.sh flash` | Fetch Oryx + build + flash with Zapp | One-shot terminal build/flash workflow |
+| `./build.sh keymapp` | Fetch Oryx + build + open Keymapp | GUI fallback |
 | `./build.sh fetch` | Same as no args (alias) | If you want to be explicit |
 
 The default behavior (fetch Oryx + build) was set up on 2026-06-08
@@ -80,6 +82,28 @@ Three pieces work together: **Oryx** (for the graphical layout editor),
 
 `./build.sh` does the whole thing — fetches Oryx (or uses local keymap if
 you pass `qmk`), compiles, and drops a .bin in the repo root.
+
+### Flash from the terminal
+
+`./build.sh flash` builds the latest firmware and then runs:
+
+```bash
+zapp flash zsa_moonlander_reva_nvWgW.bin
+```
+
+Zapp waits until the Moonlander enters bootloader mode. Press your
+`QK_BOOT` key or the hardware reset button when the terminal asks. Once
+Zapp detects the bootloader, it flashes the built `.bin` automatically.
+
+Install Zapp with:
+
+```bash
+brew install zapp
+```
+
+`/Applications/kontroll` can inspect/control live Keymapp state, but its
+current command surface does not expose a bootloader/reset command, so
+the script does not use Kontroll for flashing.
 
 ### Build on GitHub
 

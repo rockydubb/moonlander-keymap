@@ -1,4 +1,4 @@
-# Daily workflow — Oryx → local build → flash
+# Daily workflow — Oryx -> local build -> terminal flash
 
 The whole point of this repo is to make the Oryx → build → flash cycle
 fast and local. No more waiting on GitHub Actions.
@@ -38,15 +38,22 @@ message to confirm your custom snippets are still in.
 
 ### 3. Flash
 
-- Open Keymapp (already installed)
-- Click **"Select firmware"** — it auto-opens the repo root
-- Pick `zsa_moonlander_reva_nvWgW.bin`
-- Click the flash button
-- macOS may prompt to allow the USB accessory — click Allow
-- Done — your Moonlander has the new layout
+Run:
 
-Or use `./build.sh flash` which does steps 2 and 3 (build + open
-Keymapp).
+```bash
+./build.sh flash
+```
+
+This rebuilds the firmware and then runs Zapp against the built `.bin`.
+When the terminal asks, put the Moonlander in bootloader mode by
+pressing your `QK_BOOT` key or the hardware reset button. Zapp waits for
+the bootloader, detects it, and flashes automatically.
+
+If you want the old GUI handoff, run:
+
+```bash
+./build.sh keymapp
+```
 
 ## The 3 build.sh commands
 
@@ -54,7 +61,8 @@ Keymapp).
 |---|---|---|
 | `./build.sh` | Fetch Oryx + build | **Default.** After editing in Oryx. |
 | `./build.sh qmk` | Build only (no fetch) | After editing QMK code directly in `nvWgW/keymap.c` |
-| `./build.sh flash` | Fetch Oryx + build + open Keymapp | One-shot automation |
+| `./build.sh flash` | Fetch Oryx + build + flash with Zapp | One-shot terminal workflow |
+| `./build.sh keymapp` | Fetch Oryx + build + open Keymapp | GUI fallback |
 
 **The default is fetch Oryx + build** because Rocky's workflow is
 95% editing in Oryx. For the 5% case where you want to edit QMK code

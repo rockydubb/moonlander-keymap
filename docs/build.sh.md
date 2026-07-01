@@ -12,8 +12,11 @@ One-command local build for the Moonlander keymap.
 # nvWgW/keymap.c directly and don't want Oryx to overwrite your changes)
 ./build.sh qmk
 
-# Build and open Keymapp for flashing
+# Build and flash from the terminal with Zapp
 ./build.sh flash
+
+# Build and open Keymapp as a GUI fallback
+./build.sh keymapp
 ```
 
 ## Commands
@@ -22,7 +25,8 @@ One-command local build for the Moonlander keymap.
 |---|---|
 | `./build.sh` | Fetch Oryx → build → drop .bin in repo root |
 | `./build.sh qmk` | Build only (no Oryx fetch) — keeps local QMK edits |
-| `./build.sh flash` | Fetch Oryx → build → open Keymapp |
+| `./build.sh flash` | Fetch Oryx → build → flash with Zapp |
+| `./build.sh keymapp` | Fetch Oryx → build → open Keymapp |
 | `./build.sh fetch` | Same as no args (alias) |
 
 ## What it does (in order)
@@ -39,6 +43,9 @@ One-command local build for the Moonlander keymap.
 4. **Compile** with `qmk compile -kb zsa/moonlander/reva -km nvWgW`.
 5. **Drop .bin** in two places: `qmk_firmware/` (QMK's default) and
    the repo root (for easy access by Keymapp's firmware picker).
+6. **Flash with Zapp** when using `./build.sh flash`: runs
+   `zapp flash zsa_moonlander_reva_nvWgW.bin` and waits for the
+   Moonlander to enter bootloader mode.
 
 ## Output
 
@@ -71,6 +78,7 @@ Oryx last used (`firmware<N>` branch on zsa/qmk_firmware).
 - `arm-none-eabi-gcc` (installed automatically by `qmk setup`)
 - `git`
 - `jq` (for the Oryx fetch step)
+- `zapp` for `./build.sh flash` (`brew install zapp`)
 - Internet access on first run (to clone zsa/qmk_firmware and fetch
   the Oryx layout)
 
@@ -100,3 +108,17 @@ be ZSA's fork, not the generic `qmk/qmk_firmware`. Delete
 Oryx regenerated `keyboard_post_init_user()` and removed the RGB
 animation block. Re-apply the snippet (see `docs/custom-features.md`),
 then run `./build.sh qmk` to build without re-fetching.
+
+### `zapp: command not found`
+
+Install Zapp:
+
+```bash
+brew install zapp
+```
+
+Then re-run:
+
+```bash
+./build.sh flash
+```
