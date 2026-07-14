@@ -147,7 +147,28 @@ copy_keymap() {
 }
 
 ###############################
-# Step 4: build
+# Step 4: generate custom autocorrect data
+###############################
+generate_autocorrect_data() {
+  local dict_path="$SCRIPT_DIR/$KEYMAP/autocorrect_dict.txt"
+  local data_path="$SCRIPT_DIR/$KEYMAP/autocorrect_data.h"
+
+  if [[ ! -f "$dict_path" ]]; then
+    return
+  fi
+
+  if ! command -v qmk >/dev/null 2>&1; then
+    echo "ERROR: qmk is required to generate Autocorrect data." >&2
+    exit 1
+  fi
+
+  echo ""
+  echo "▶ Generating custom Autocorrect dictionary..."
+  qmk generate-autocorrect-data "$dict_path" -o "$data_path"
+}
+
+###############################
+# Step 5: build
 ###############################
 do_build() {
   echo ""
@@ -168,7 +189,7 @@ do_build() {
 }
 
 ###############################
-# Step 5: flash with Zapp
+# Step 6: flash with Zapp
 ###############################
 do_flash() {
   local bin_path="$SCRIPT_DIR/zsa_moonlander_reva_${KEYMAP}.bin"
@@ -195,7 +216,7 @@ do_flash() {
 }
 
 ###############################
-# Step 6: open Keymapp
+# Step 7: open Keymapp
 ###############################
 do_keymapp() {
   local bin_path="$SCRIPT_DIR/zsa_moonlander_reva_${KEYMAP}.bin"
@@ -229,11 +250,13 @@ do_keymapp() {
 case "${1:-}" in
   "")
     fetch_oryx
+    generate_autocorrect_data
     ensure_qmk_firmware
     copy_keymap
     do_build
     ;;
   build)
+    generate_autocorrect_data
     ensure_qmk_firmware
     copy_keymap
     do_build
@@ -242,18 +265,21 @@ case "${1:-}" in
     # Build without fetching from Oryx — use this when you've edited
     # QMK code (custom keycodes, RGB tweaks, etc.) directly in
     # nvWgW/keymap.c and don't want Oryx to overwrite your changes.
+    generate_autocorrect_data
     ensure_qmk_firmware
     copy_keymap
     do_build
     ;;
   fetch)
     fetch_oryx
+    generate_autocorrect_data
     ensure_qmk_firmware
     copy_keymap
     do_build
     ;;
   flash)
     fetch_oryx
+    generate_autocorrect_data
     ensure_qmk_firmware
     copy_keymap
     do_build
@@ -261,6 +287,7 @@ case "${1:-}" in
     ;;
   keymapp)
     fetch_oryx
+    generate_autocorrect_data
     ensure_qmk_firmware
     copy_keymap
     do_build

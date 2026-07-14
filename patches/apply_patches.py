@@ -45,10 +45,11 @@ PATCHES = [
   // This snippet is re-applied by patches/apply_patches.py after Oryx syncs.
   keyboard_config.disable_layer_led = true;
   eeconfig_update_kb(keyboard_config.raw);
+  autocorrect_enable();
   rgb_matrix_enable_noeeprom();
   rgb_matrix_mode_noeeprom(6);  // CYCLE_LEFT_RIGHT (rainbow sweep)
 }""",
-        "idempotency_check": "rgb_matrix_mode_noeeprom(6);",
+        "idempotency_check": "autocorrect_enable();",
     },
     # --------------------------------------------------------------
     # Patch 2: Autocorrect toggle key
@@ -72,6 +73,69 @@ PATCHES = [
         "find": "CAPS_WORD_ENABLE = yes\n",
         "replace": "CAPS_WORD_ENABLE = yes\nAUTOCORRECT_ENABLE = yes\n",
         "idempotency_check": "AUTOCORRECT_ENABLE = yes",
+    },
+    # --------------------------------------------------------------
+    # Patch 4: Feed Oryx custom tap letters into Autocorrect
+    # Oryx's generated DUAL_FUNC handlers send letters manually with
+    # register_code16() and return false, which stops QMK's normal
+    # process_autocorrect() pass from seeing those letters. Feed the
+    # tapped letter into Autocorrect before sending it to the host.
+    # --------------------------------------------------------------
+    {
+        "description": "Add helper for Autocorrect on Oryx custom tap letters",
+        "path": KEYMAP_C,
+        "find": "bool process_record_user(uint16_t keycode, keyrecord_t *record) {\n",
+        "replace": """static void process_autocorrect_for_custom_keycode(uint16_t keycode, keyrecord_t *record) {
+#ifdef AUTOCORRECT_ENABLE
+  process_autocorrect(keycode, record);
+#endif
+}
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+""",
+        "idempotency_check": "process_autocorrect_for_custom_keycode",
+    },
+    {
+        "description": "Feed DUAL_FUNC_0 tap letter into Autocorrect",
+        "path": KEYMAP_C,
+        "find": "          register_code16(KC_F);\n",
+        "replace": "          process_autocorrect_for_custom_keycode(KC_F, record);\n          register_code16(KC_F);\n",
+        "idempotency_check": "process_autocorrect_for_custom_keycode(KC_F, record);",
+    },
+    {
+        "description": "Feed DUAL_FUNC_1 tap letter into Autocorrect",
+        "path": KEYMAP_C,
+        "find": "          register_code16(KC_Z);\n",
+        "replace": "          process_autocorrect_for_custom_keycode(KC_Z, record);\n          register_code16(KC_Z);\n",
+        "idempotency_check": "process_autocorrect_for_custom_keycode(KC_Z, record);",
+    },
+    {
+        "description": "Feed DUAL_FUNC_2 tap letter into Autocorrect",
+        "path": KEYMAP_C,
+        "find": "          register_code16(KC_X);\n",
+        "replace": "          process_autocorrect_for_custom_keycode(KC_X, record);\n          register_code16(KC_X);\n",
+        "idempotency_check": "process_autocorrect_for_custom_keycode(KC_X, record);",
+    },
+    {
+        "description": "Feed DUAL_FUNC_3 tap letter into Autocorrect",
+        "path": KEYMAP_C,
+        "find": "          register_code16(KC_C);\n",
+        "replace": "          process_autocorrect_for_custom_keycode(KC_C, record);\n          register_code16(KC_C);\n",
+        "idempotency_check": "process_autocorrect_for_custom_keycode(KC_C, record);",
+    },
+    {
+        "description": "Feed DUAL_FUNC_4 tap letter into Autocorrect",
+        "path": KEYMAP_C,
+        "find": "          register_code16(KC_V);\n",
+        "replace": "          process_autocorrect_for_custom_keycode(KC_V, record);\n          register_code16(KC_V);\n",
+        "idempotency_check": "process_autocorrect_for_custom_keycode(KC_V, record);",
+    },
+    {
+        "description": "Feed DUAL_FUNC_7 tap letter into Autocorrect",
+        "path": KEYMAP_C,
+        "find": "          register_code16(KC_P);\n",
+        "replace": "          process_autocorrect_for_custom_keycode(KC_P, record);\n          register_code16(KC_P);\n",
+        "idempotency_check": "process_autocorrect_for_custom_keycode(KC_P, record);",
     },
 ]
 

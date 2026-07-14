@@ -35,15 +35,17 @@ One-command local build for the Moonlander keymap.
    API for the latest revision of your layout, downloads the source
    zip, extracts it into `nvWgW/`. This OVERWRITES `keymap.c` with
    Oryx's freshly-regenerated content.
-2. **Ensure ZSA QMK source** is present: clones `zsa/qmk_firmware` at
+2. **Generate custom Autocorrect data** from
+   `nvWgW/autocorrect_dict.txt` into `nvWgW/autocorrect_data.h`.
+3. **Ensure ZSA QMK source** is present: clones `zsa/qmk_firmware` at
    the latest `firmware<N>` branch (only on first run, or if
    `qmk_firmware/` was deleted).
-3. **Copy keymap** into the QMK build tree (`qmk_firmware/keyboards/
+4. **Copy keymap** into the QMK build tree (`qmk_firmware/keyboards/
    zsa/moonlander/keymaps/nvWgW/`).
-4. **Compile** with `qmk compile -kb zsa/moonlander/reva -km nvWgW`.
-5. **Drop .bin** in two places: `qmk_firmware/` (QMK's default) and
+5. **Compile** with `qmk compile -kb zsa/moonlander/reva -km nvWgW`.
+6. **Drop .bin** in two places: `qmk_firmware/` (QMK's default) and
    the repo root (for easy access by Keymapp's firmware picker).
-6. **Flash with Zapp** when using `./build.sh flash`: runs
+7. **Flash with Zapp** when using `./build.sh flash`: runs
    `zapp flash zsa_moonlander_reva_nvWgW.bin` and waits for the
    Moonlander to enter bootloader mode.
 

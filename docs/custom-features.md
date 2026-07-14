@@ -44,10 +44,17 @@ punctuation:
 - `adn ` → `and `
 - `hte ` → `the `
 
-No custom dictionary file is required for the current setup. QMK falls
-back to its built-in default dictionary when `autocorrect_data.h` is not
-present. See `docs/autocorrect.md` for the custom dictionary path if you
-want to add your own corrections later.
+The current custom dictionary is generated from
+`nvWgW/autocorrect_dict.txt`. It includes QMK's default corrections plus
+local test entries like `gglobe -> world` and `childe -> pineapple`.
+See `docs/autocorrect.md` for the full flow.
+
+Tapped Oryx dual-function letters are manually fed into Autocorrect so
+words containing custom keys like `C`, `F`, `P`, `V`, `X`, and `Z` can
+still be corrected.
+
+The firmware forces Autocorrect on at keyboard startup so the persisted
+EEPROM toggle state cannot leave it silently disabled after flashing.
 
 Toggle OFF when typing code or terminal commands to avoid false
 corrections.
